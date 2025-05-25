@@ -1,25 +1,28 @@
-# bot.py
 from pyrogram import Client, filters
 from datetime import datetime
-from config import BOT_TOKEN, API_ID, API_HASH, OWNER_ID, LOG_CHANNEL
-from handlers import tagall, admin, welcome
+from config import API_ID, API_HASH, OWNER_ID, LOG_CHANNEL
 
+# Create userbot client (no bot_token needed)
 app = Client(
-    "helpvc_bot",
+    "helpvc_userbot",
     api_id=API_ID,
     api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
     workers=20,
 )
 
 # Import handlers
-app.add_handler(tagall.tagall_handler)
-app.add_handler(admin.admin_handler)
-app.add_handler(welcome.welcome_handler)
+from handlers import tagall, admin, welcome, userbot, antispam  # userbot = vc notify handler
 
-# Start command
+# Register handlers
+tagall.setup(app)
+admin.setup(app)
+welcome.setup(app)
+userbot.setup(app)  # VC notify handler
+antispam.setup(app)
+
+# Basic commands
 @app.on_message(filters.command("start") & filters.private)
-async def start(_, message):
+async def start(client, message):
     user = message.from_user
     text = (
         f"Hello, {user.mention}!\n"
@@ -29,22 +32,21 @@ async def start(_, message):
     )
     await message.reply_text(text, quote=True)
 
-# Help command
 @app.on_message(filters.command("help") & filters.private)
-async def help_command(_, message):
+async def help_command(client, message):
     help_text = (
-        "**HelpVC Info Bot Commands:**\n\n"
+        "**HelpVC Userbot Commands:**\n\n"
         "/start - Start bot & get your info\n"
         "/help - Show this help message\n"
         "/ping - Check bot response time\n"
         "/tagall - Tag all users in a group (admin only)\n"
         "/ban, /unban, /kick, /mute, /unmute, /warn - Admin tools\n"
+        "Anti-spam, welcome messages & VC notifications active."
     )
     await message.reply_text(help_text, quote=True)
 
-# Ping command
 @app.on_message(filters.command("ping") & filters.private)
-async def ping(_, message):
+async def ping(client, message):
     start = datetime.now()
     msg = await message.reply_text("Pinging...")
     end = datetime.now()
@@ -52,5 +54,5 @@ async def ping(_, message):
     await msg.edit(f"Pong! Response time: {duration} ms")
 
 if __name__ == "__main__":
-    print("HelpVC Info bot is starting...")
+    print("HelpVC Userbot is starting...")
     app.run()
